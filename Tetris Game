@@ -1,0 +1,541 @@
+package Tetris;
+
+import java.awt.*;
+import java.awt.event.*;
+public class Tetris extends Frame implements KeyListener {
+ 
+        Thread loopThread;
+        int squareSize = 15;    // size of one square in pixels
+        int xMin = 100;
+        int yMin = 100;
+        int xMax = 550;
+        int yMax = 450;         // so grid is 12 x 20 squares
+        int row;
+        int col, oldCol;
+        int Shape = 1;
+        int previewShape = 0;
+        double score = 0;
+        boolean gameOver = false;
+        boolean paused = false;
+        public boolean intro = true;
+        public boolean gameStart = false;
+        public boolean left = false;
+        public boolean right = false;
+        public boolean up = false;
+        public boolean down = false;
+ 
+        public static int[][][] shape   = new int[8][4][4];
+        public static int[][] grid      = new int[14][22];
+ 
+        private static Color[] colors = {
+                Color.BLACK, Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW,
+                new Color(170, 0, 190), Color.CYAN, Color.ORANGE
+        };
+ 
+        Tetris() {
+                setTitle("Tetris by Chris Clarke");
+                for (int r=0; r<20; r++)
+                        for (int c=0; c<12; c++)
+                                grid[c][r]=0;
+                // rod shape
+                shape[1][0][0]=0;
+                shape[1][0][1]=0;
+                shape[1][0][2]=1;
+                shape[1][0][3]=0;
+                // rod shape
+                shape[1][1][0]=0;
+                shape[1][1][1]=0;
+                shape[1][1][2]=1;
+                shape[1][1][3]=0;
+                // rod shape
+                shape[1][2][0]=0;
+                shape[1][2][1]=0;
+                shape[1][2][2]=1;
+                shape[1][2][3]=0;
+                // rod shape
+                shape[1][3][0]=0;
+                shape[1][3][1]=0;
+                shape[1][3][2]=1;
+                shape[1][3][3]=0;
+                // square shape
+                shape[2][0][0]=0;
+                shape[2][0][1]=0;
+                shape[2][0][2]=0;
+                shape[2][0][3]=0;
+                // square shape
+                shape[2][1][0]=0;
+                shape[2][1][1]=0;
+                shape[2][1][2]=0;
+                shape[2][1][3]=0;
+                // square shape
+                shape[2][2][0]=0;
+                shape[2][2][1]=2;
+                shape[2][2][2]=2;
+                shape[2][2][3]=0;
+                // square shape
+                shape[2][3][0]=0;
+                shape[2][3][1]=2;
+                shape[2][3][2]=2;
+                shape[2][3][3]=0;
+                // twist left shape
+                shape[3][0][0]=0;
+                shape[3][0][1]=0;
+                shape[3][0][2]=0;
+                shape[3][0][3]=0;
+                // twist left shape
+                shape[3][1][0]=0;
+                shape[3][1][1]=3;
+                shape[3][1][2]=0;
+                shape[3][1][3]=0;
+                // twist left shape
+                shape[3][2][0]=0;
+                shape[3][2][1]=3;
+                shape[3][2][2]=3;
+                shape[3][2][3]=0;
+                // twist left shape
+                shape[3][3][0]=0;
+                shape[3][3][1]=0;
+                shape[3][3][2]=3;
+                shape[3][3][3]=0;
+                // twist right shape
+                shape[4][0][0]=0;
+                shape[4][0][1]=0;
+                shape[4][0][2]=0;
+                shape[4][0][3]=0;
+                // twist right shape
+                shape[4][1][0]=0;
+                shape[4][1][1]=0;
+                shape[4][1][2]=4;
+                shape[4][1][3]=0;
+                // twist right shape
+                shape[4][2][0]=0;
+                shape[4][2][1]=4;
+                shape[4][2][2]=4;
+                shape[4][2][3]=0;
+                // twist right shape
+                shape[4][3][0]=0;
+                shape[4][3][1]=4;
+                shape[4][3][2]=0;
+                shape[4][3][3]=0;
+                // T shape
+                shape[5][0][0]=0;
+                shape[5][0][1]=0;
+                shape[5][0][2]=0;
+                shape[5][0][3]=0;
+                // T shape
+                shape[5][1][0]=0;
+                shape[5][1][1]=5;
+                shape[5][1][2]=0;
+                shape[5][1][3]=0;
+                // T shape
+                shape[5][2][0]=0;
+                shape[5][2][1]=5;
+                shape[5][2][2]=5;
+                shape[5][2][3]=0;
+                // T shape
+                shape[5][3][0]=0;
+                shape[5][3][1]=5;
+                shape[5][3][2]=0;
+                shape[5][3][3]=0;
+                // L shape
+                shape[6][0][0]=0;
+                shape[6][0][1]=0;
+                shape[6][0][2]=0;
+                shape[6][0][3]=0;
+                // L shape
+                shape[6][1][0]=0;
+                shape[6][1][1]=6;
+                shape[6][1][2]=6;
+                shape[6][1][3]=0;
+                // L shape
+                shape[6][2][0]=0;
+                shape[6][2][1]=0;
+                shape[6][2][2]=6;
+                shape[6][2][3]=0;
+                // L shape
+                shape[6][3][0]=0;
+                shape[6][3][1]=0;
+                shape[6][3][2]=6;
+                shape[6][3][3]=0;
+                // L shape reversed
+                shape[7][0][0]=0;
+                shape[7][0][1]=0;
+                shape[7][0][2]=0;
+                shape[7][0][3]=0;
+                // L shape reversed
+                shape[7][1][0]=0;
+                shape[7][1][1]=7;
+                shape[7][1][2]=7;
+                shape[7][1][3]=0;
+                // L shape reversed
+                shape[7][2][0]=0;
+                shape[7][2][1]=7;
+                shape[7][2][2]=0;
+                shape[7][2][3]=0;
+                // L shape reversed
+                shape[7][3][0]=0;
+                shape[7][3][1]=7;
+                shape[7][3][2]=0;
+                shape[7][3][3]=0;
+               
+                row=0;
+                col=5;
+                oldCol=5;
+               
+                for (int r=0; r<=20; r++)
+                        if (r<20) {
+                                grid[1][r]=8;
+                                grid[12][r]=8;
+                        } else
+                                for (int c=1; c<=12; c++)
+                                        grid[c][r]=8;
+ 
+                setBackground(Color.white);
+                setSize(xMax, yMax);
+                addKeyListener(this);
+                setFocusable(true);
+                repaint();
+        }
+ 
+        public void paint(Graphics g) {
+                update(g);
+        }
+ 
+        public void drawBlock() {
+                for (int r=0; r<=3; r++)
+                        for (int c=0; c<=3; c++)
+                                if (shape[Shape][r][c]!=0)
+                                        grid[col+c][row+r]=shape[Shape][r][c];
+        }
+ 
+        public void removeBlock() {
+                for (int r=0; r<=3; r++)
+                        for (int c=0; c<=3; c++) {
+                                if (shape[Shape][r][c]!=0)
+                                        grid[oldCol+c][row+r]=0;
+                                grid[col+c][0+r]=0;
+                        }
+        }
+ 
+        public void chooseShape(Graphics g) {
+                if (previewShape==0) previewShape=1+(int)(Math.random()*7);
+                Shape=previewShape;
+                previewShape=1+(int)(Math.random()*7);
+                drawPreview(g);
+        }
+ 
+        public void drawPreview(Graphics g) {
+                for (int r=0; r<=3; r++)
+                        for (int c=0; c<=3; c++) {
+                                if (shape[previewShape][r][c]!=0)
+                                        g.setColor(colors[previewShape]);
+                                else
+                                        g.setColor(Color.WHITE);
+                                g.fillRect(180+(squareSize*c), 30+(squareSize*r),
+                                 squareSize, squareSize);
+                        }
+        }
+ 
+        public void update(Graphics g) {
+                int delay;
+                if (intro) {
+                        chooseShape(g);
+                        displayIntro(g);
+                } else if (gameStart&&!paused) {
+                        removeBlock();
+                        if ((left)&&(overlap())&&(col<oldCol))  // move it right
+                                col++;
+                        if ((right)&&(overlap())&&(col>oldCol)) // move it left
+                                col--;
+                        if ((up)&&(col>=2)&&(col<=8))
+                                rotateRight();
+                        if ((down)&&(col>=2)&&(col<=8))
+                                rotateLeft();
+                        if (!overlap()) {
+                                // move block down one square
+                                row++;
+                                drawBlock();
+                        } else {
+                                if (row<=1)
+                                        end(g);
+                                else drawBlock();
+                                for (int r=19; r>0; r--)
+                                        if (isRow(r))
+                                                drawWhiteRectangle(g, r);
+                                for (int r=19; r>0; r--)
+                                        while (isRow(r)) {             
+                                                updateGrid(r);
+                                                score += 100;   // for completed row
+                                        }
+                                startBlock(g);
+                                score += 10;            // for each block
+                        }
+                        for (int r=0; r<20; r++)
+                                for (int c=2; c<=11; c++) {
+                                        g.setColor(colors[grid[c][r]]);
+                                        g.fillRect(xMin+(squareSize*c),
+                                         yMin+(squareSize*r), squareSize, squareSize);
+                                }
+                        showScore(g);
+                        updateObject();
+                        try {
+                                if (score<1000)
+                                        delay = 400;
+                                else
+                                        delay = 300;    // speed it up
+                                Thread.sleep(delay);
+                        }
+                        catch (InterruptedException e) {}
+                        repaint();
+                }
+        }
+ 
+        public boolean isRow(int r) {
+                // is there a complete row?
+                boolean line=true;                              // assume true
+                for (int c=2; c<=11; c++)                       // but if there's a space
+                        if (grid[c][r]==0) line = false;        // false
+                return line;
+ 
+        }
+ 
+        public void displayIntro(Graphics g) {
+                g.setColor(Color.BLACK);
+                g.drawString("Press space bar to begin,", 300, 100);
+                g.drawString("then use cursor keys to move/rotate blocks.", 300, 115);
+                g.drawString("To pause press p", 300, 240);
+        }
+ 
+        public void end(Graphics g) {
+                g.setColor(Color.WHITE);
+                g.drawString("Game Over", xMin+40, yMin+50);
+                try {
+                        Thread.sleep(4000);     // long pause
+                } catch (InterruptedException e) {}
+                System.exit(0);
+        }
+ 
+        public void showScore(Graphics g) {
+                g.setColor(Color.WHITE);
+                // remove writing
+                g.fillRect(300, 80, 450, 240);
+                g.setColor(Color.BLACK);
+                g.drawString("Score "+(int)(score), 350, 100);
+        }
+ 
+        public void drawWhiteRectangle(Graphics g, int r) {
+                g.setColor(Color.WHITE);
+                g.drawRect(xMin+2*squareSize, yMin+(squareSize*r),
+                 10*squareSize, squareSize);
+                try {
+                        Thread.sleep(500);
+                }
+                catch (InterruptedException e) {}
+        }
+ 
+        public void updateGrid(int row) {
+                for (int i=row; i>0; i--)
+                        for (int c=2; c<=11; c++) {
+                                grid[c][i]=grid[c][i-1];
+                                grid[c][0]=0;
+                        }
+        }
+ 
+        public void startBlock(Graphics g) {
+                row=0;
+                col=5;
+                chooseShape(g);
+                drawBlock();            // change to drawStartBlock perhaps?
+                                        // to make it scroll from very top?
+        }
+ 
+        public boolean canGo(int c) {
+                for (int r=0; r<=3; r++)
+                        if (shape[Shape][r][c]>0)       // there is part of shape there
+                                return false;
+                return true;
+        }
+ 
+        public boolean overlap() {
+                for (int c=0; c<=3; c++)
+                        for (int r=0; r<=3; r++) {
+                                if (row+4>=21) return true;
+                                if ((grid[col+c][row+4-r]>0)&&(shape[Shape][3-r][c]>0))
+                                        return true;
+                        }
+                return false;
+        }
+ 
+        public void updateObject() {
+                // Move the object if left or right cursor key is down.
+                oldCol = col;
+                               
+                if (left)
+                        if ((col>2)||((col==2)&&canGo(0))||((col==1)&&canGo(1)))
+                                col--;
+                if (right)
+                        if ((col<8)||((col==8)&&canGo(3))||((col==9)&&canGo(2)))
+                                col++;
+        }
+ 
+        public void rotateLeft() {
+                if (Shape==1) {
+                        if (shape[1][2][0]==1) {
+                                // rod shape
+                                shape[1][0][0]=0;
+                                shape[1][0][1]=0;
+                                shape[1][0][2]=1;
+                                shape[1][0][3]=0;
+                                // rod shape
+                                shape[1][1][0]=0;
+                                shape[1][1][1]=0;
+                                shape[1][1][2]=1;
+                                shape[1][1][3]=0;
+                                // rod shape
+                                shape[1][2][0]=0;
+                                shape[1][2][1]=0;
+                                shape[1][2][2]=1;
+                                shape[1][2][3]=0;
+                                // rod shape
+                                shape[1][3][0]=0;
+                                shape[1][3][1]=0;
+                                shape[1][3][2]=1;
+                                shape[1][3][3]=0;
+                        } else {
+                                // rod shape
+                                shape[1][0][0]=0;
+                                shape[1][0][1]=0;
+                                shape[1][0][2]=0;
+                                shape[1][0][3]=0;
+                                // rod shape
+                                shape[1][1][0]=0;
+                                shape[1][1][1]=0;
+                                shape[1][1][2]=0;
+                                shape[1][1][3]=0;
+                                // rod shape
+                                shape[1][2][0]=1;
+                                shape[1][2][1]=1;
+                                shape[1][2][2]=1;
+                                shape[1][2][3]=1;
+                                // rod shape
+                                shape[1][3][0]=0;
+                                shape[1][3][1]=0;
+                                shape[1][3][2]=0;
+                                shape[1][3][3]=0;
+                        }
+                        return;
+                }
+                               
+                if (Shape==2) return;
+                int[][] temp = new int[4][4];
+                for (int i=0; i<=3; i++)
+                        for (int j=0; j<=3; j++)
+                                temp[i][j]=shape[Shape][i][j];
+                removeBlock();
+                for (int i=0; i<=3; i++)
+                        for (int j=0; j<=3; j++)
+                                shape[Shape][3-j][i]=temp[i][j];
+        }
+ 
+        public void rotateRight() {
+                if (Shape==1) {
+                        if (shape[1][2][0]==1) {
+                                // rod shape
+                                shape[1][0][0]=0;
+                                shape[1][0][1]=0;
+                                shape[1][0][2]=1;
+                                shape[1][0][3]=0;
+                                // rod shape
+                                shape[1][1][0]=0;
+                                shape[1][1][1]=0;
+                                shape[1][1][2]=1;
+                                shape[1][1][3]=0;
+                                // rod shape
+                                shape[1][2][0]=0;
+                                shape[1][2][1]=0;
+                                shape[1][2][2]=1;
+                                shape[1][2][3]=0;
+                                // rod shape
+                                shape[1][3][0]=0;
+                                shape[1][3][1]=0;
+                                shape[1][3][2]=1;
+                                shape[1][3][3]=0;
+                        } else {
+                                // rod shape
+                                shape[1][0][0]=0;
+                                shape[1][0][1]=0;
+                                shape[1][0][2]=0;
+                                shape[1][0][3]=0;
+                                // rod shape
+                                shape[1][1][0]=0;
+                                shape[1][1][1]=0;
+                                shape[1][1][2]=0;
+                                shape[1][1][3]=0;
+                                // rod shape
+                                shape[1][2][0]=1;
+                                shape[1][2][1]=1;
+                                shape[1][2][2]=1;
+                                shape[1][2][3]=1;
+                                // rod shape
+                                shape[1][3][0]=0;
+                                shape[1][3][1]=0;
+                                shape[1][3][2]=0;
+                                shape[1][3][3]=0;
+                        }
+                        return;
+                }
+ 
+                if (Shape==2) return;
+                int[][] temp = new int[4][4];
+                for (int i=0; i<=3; i++)
+                        for (int j=0; j<=3; j++)
+                                temp[i][j]=shape[Shape][i][j];
+                removeBlock();
+                for (int i=0; i<=3; i++)
+                        for (int j=0; j<=3; j++)
+                                shape[Shape][i][j]=temp[3-j][i];
+        }
+ 
+        public void keyPressed(KeyEvent e) {
+                // Check if any cursor keys have been pressed and set flags.
+                int keyCode = e.getKeyCode();
+                if (keyCode == KeyEvent.VK_LEFT)
+                        left = true;
+                if (keyCode == KeyEvent.VK_RIGHT)
+                        right = true;
+                if (keyCode == KeyEvent.VK_UP)
+                        up = true;
+                if (keyCode == KeyEvent.VK_DOWN)
+                        down = true;
+                if (keyCode == KeyEvent.VK_P) { // The letter 'p' pressed
+                        paused = !paused;
+                        repaint();
+                }
+                if (keyCode == KeyEvent.VK_SPACE) {
+                        if (intro) {
+                                intro = false;
+                                gameStart = true; // start game when mouse is clicked
+                                repaint();
+                        }
+                }
+        }
+ 
+        public void keyReleased(KeyEvent e) {
+                // Check if any cursor keys were released and set flags.
+                int keyCode = e.getKeyCode();
+                if (keyCode == KeyEvent.VK_LEFT)
+                        left = false;
+                if (keyCode == KeyEvent.VK_RIGHT)
+                        right = false;
+                if (keyCode == KeyEvent.VK_UP)
+                        up = false;
+                if (keyCode == KeyEvent.VK_DOWN)
+                        down = false;
+        }
+ 
+        public void keyTyped(KeyEvent e) {}
+ 
+        public static void main(String[] args) {
+                new Tetris().setVisible(true);
+        }
+}
